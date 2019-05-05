@@ -71,6 +71,15 @@ public class Grid{
      return true;
     }
 
+    // done() will return true if the board is full
+    private bool done(){
+
+    }
+
+    public void play(){
+
+    }
+
     // the main function
     public static void main(String args[]){
         Grid g = new Grid();
