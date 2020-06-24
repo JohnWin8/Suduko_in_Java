@@ -1,5 +1,11 @@
+import java.io.BufferedReader;
+import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
+import java.io.FileReader;
+import java.util.ArrayList;
+import java.io.FileNotFoundException;
 
 public class Grid{
     private int[][] theBoard;
@@ -14,6 +20,25 @@ public class Grid{
                 theBoard[i][j] = -1;
             }
         } 
+    }
+
+    public Grid(List<String> values){
+        theBoard = new int[DIMENSION][DIMENSION];
+        for (int i = 0; i < DIMENSION; i++){
+            for (int j = 0; j < DIMENSION; j++){
+                String nextVal = values.get(i * DIMENSION + j);
+                if (nextVal.equals("-")){
+                    theBoard[i][j] = -1;
+                } else {
+                    int valToUse = -1;
+                    try {
+                        valToUse = Integer.parseInt(nextVal);
+                    } catch (Exception ignored){}
+
+                    theBoard[i][j] = valToUse;
+                }
+            }
+        }
     }
 
     // this toString will print the game board as it is supposed to be printed
@@ -126,8 +151,30 @@ public class Grid{
     }
 
     public static void main(String args[]){
-        Grid g = new Grid();
+        Grid g = null;
+        if (args.length == 2 && args[0].equals("-f")){
+            String filename = args[1];
+            File file = new File(filename);
+            try (FileReader fr = new FileReader(file);
+                BufferedReader br = new BufferedReader(fr)){
+                    List<String> list = new ArrayList<>();
+                    String line;
+                    while(((line = br.readLine()) != null) && list.size() < DIMENSION * DIMENSION){
+                        list.addAll(Arrays.asList(line.split(",")));
+                    }
+                    if (list.size() >= DIMENSION * DIMENSION) {
+                        g = new Grid(list.subList(0, DIMENSION * DIMENSION));
+                    }
+            } catch (Exception ignored){
+                System.err.println("Could not read in from file " + filename);
+                System.err.println(ignored.getMessage());
+            }
+        }
+
+        if (g == null) g = new Grid();
+
         System.out.println(g);
+        System.out.println();
         while(!g.boardIsFull()){
             g.playOneRound();
             System.out.println();
