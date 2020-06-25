@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Scanner;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.io.FileNotFoundException;
 
 public class Grid{
     private int[][] theBoard;
@@ -150,6 +149,19 @@ public class Grid{
 
     }
 
+    public boolean followsAllRules(){
+        for (int i = 0; i < DIMENSION; i++){
+            for (int j = 0; j < DIMENSION; j++){
+               if (theBoard[i][j] == -1){
+                   continue;
+               } 
+               if (!canPutValInSpot(i, j, theBoard[i][j]))
+                    return false;
+            }
+        }
+        return true;
+    }
+
     public static void main(String args[]){
         Grid g = null;
         if (args.length == 2 && args[0].equals("-f")){
@@ -163,11 +175,15 @@ public class Grid{
                         list.addAll(Arrays.asList(line.split(",")));
                     }
                     if (list.size() >= DIMENSION * DIMENSION) {
-                        g = new Grid(list.subList(0, DIMENSION * DIMENSION));
+                        Grid potential = new Grid(list.subList(0, DIMENSION * DIMENSION));
+                        if (potential.followsAllRules())
+                            g = potential;
+                        else 
+                            System.err.println("Didn't use input gameboard because it was an illegal game board");
+                        
                     }
             } catch (Exception ignored){
                 System.err.println("Could not read in from file " + filename);
-                System.err.println(ignored.getMessage());
             }
         }
 
