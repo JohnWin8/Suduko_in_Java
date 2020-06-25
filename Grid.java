@@ -11,6 +11,12 @@ public class Grid{
     static final int DIMENSION = 9;
     static Scanner scanner = new Scanner(System.in);
 
+    final static int GOOD_VALUE = 1;
+    final static int FAILED_RANGE_CHECK = -1;
+    final static int FAILED_ROW_CHECK = -2;
+    final static int FAILED_COL_CHECK = -3;
+    final static int FAILED_SQUARE_CHECK = -4;
+
     // ctor for out Grid class
     public Grid(){
         theBoard = new int[DIMENSION][DIMENSION];
@@ -61,17 +67,19 @@ public class Grid{
     }
 
     // canPutValInSpot will check if we can put val into the board at point (x,y)
-    private boolean canPutValInSpot(int x, int y, int val){
-       if (!rangeCheck(x,y,val) || !isValInRow(x,y,val) || !isValInColumn(x,y,val) || !isValInSquare(x, y, val)) 
-            return false;
-       return true;
+    private int canPutValInSpot(int x, int y, int val){
+       if (!rangeCheck(x, y, val)) return FAILED_RANGE_CHECK;
+       if (!isValInRow(x, y, val)) return FAILED_ROW_CHECK;
+       if (!isValInColumn(x, y, val)) return FAILED_COL_CHECK;
+       if (!isValInSquare(x, y, val)) return FAILED_SQUARE_CHECK;
+       return GOOD_VALUE;
     }
 
     // isValInRow will check if val is the only of that number in it's row
     private boolean isValInRow(int x, int y, int val){
         for (int i = 0; i < DIMENSION; i++){
             if (i == x) continue;
-            if (theBoard[y][i] == val) return false;
+            if (theBoard[i][y] == val) return false;
         }
         return true;
     }
@@ -79,19 +87,19 @@ public class Grid{
     private boolean isValInColumn(int x, int y, int val){
         for (int i = 0; i < DIMENSION; i++){
             if (i == y) continue;
-            if (theBoard[i][x] == val) return false;
+            if (theBoard[x][i] == val) return false;
         }
         return true;
     }
 
     private boolean isValInSquare(int x, int y, int val){
         int bounds[] = new int[4]; // 0 = smallx, 1 = bigx, 2 = smally, 3 = bigy
-        bounds[0] = x / 3; bounds[1] = bounds[0] + 2;
-        bounds[2] = y / 3; bounds[3] = bounds[2]+2;
+        bounds[0] = x - (x%3); bounds[1] = bounds[0] + 2;
+        bounds[2] = y - (y%3); bounds[3] = bounds[2]+2;
         for (int i = bounds[2]; i <= bounds[3]; i++){ // i = yvals
             for (int j = bounds[0]; j <= bounds[1]; j++){ // j = x vals
                 if ((i == y) && (j == x)) continue;
-                if (theBoard[i][j] == val) return false;
+                if (theBoard[j][i] == val) return false;
             }
         }
      return true;
@@ -138,7 +146,7 @@ public class Grid{
 
             if (theBoard[x][y] > 0)
                 System.err.println("There is already a value in ("+ x + "," + y + "), " + theBoard[x][y]);
-            else if (!canPutValInSpot(x, y, val))
+            else if (0 > canPutValInSpot(x, y, val))
                 System.err.println("Illegal to put " + val + " in spot (" + x + "," + y + ")");
             else 
                 setCell(x, y, val);
@@ -155,8 +163,17 @@ public class Grid{
                if (theBoard[i][j] == -1){
                    continue;
                } 
-               if (!canPutValInSpot(i, j, theBoard[i][j]))
-                    return false;
+               int spotCheck = canPutValInSpot(i,j, theBoard[i][j]);
+               if (spotCheck < 0){
+                   switch(spotCheck){
+                       case (FAILED_COL_CHECK): {System.err.println("Failed column check"); break;}
+                       case (FAILED_RANGE_CHECK): {System.err.println("Failed range check"); break;}
+                       case (FAILED_ROW_CHECK): {System.err.println("Failed row check"); break;}
+                       case (FAILED_SQUARE_CHECK): {System.err.println("Failed Square check"); break;}
+                   }
+                   System.err.println("Failed on (i,j) = (" + i + "," + j + ")");
+                   return false;
+               }
             }
         }
         return true;
