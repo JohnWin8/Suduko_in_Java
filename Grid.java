@@ -67,6 +67,12 @@ public class Grid{
         theBoard[x][y] = val; 
     }
 
+    private void reset(int x, int y){
+        if (x < 0 || y < 0 || x >= DIMENSION || y >= DIMENSION)
+            return;
+        theBoard[x][y] = -1;
+    }
+
     // canPutValInSpot will check if we can put val into the board at point (x,y)
     // returns a negative int if the board would be wrong by putting val in (x,y)
     private int canPutValInSpot(int x, int y, int val){
@@ -153,9 +159,9 @@ public class Grid{
                 throw new Exception("Bad x,y,val values: " + x + "," + y + "," + val);
             } 
             int curVal = theBoard[x][y];
-            theBoard[x][y] = -1;
+            reset(x,y);
             if (canPutValInSpot(x, y, val) < 0){
-                theBoard[x][y] = curVal;
+                setCell(x, y, curVal);
                 throw new Exception("Illegal to put " + val + " into spot (" + x + "," + y + ")");
             } else {
                 setCell(x,y,val);
@@ -185,6 +191,35 @@ public class Grid{
 
     // solve the game board by running guess-and-check + backtracking algorithm
     private boolean solve(){
+        return subSolve(0,0);
+    }
+    private boolean subSolve(int x, int y){
+        int nextx, nexty;
+        if (x == DIMENSION-1 && x == y){
+            nextx = nexty = -1;
+        } else if (y == DIMENSION-1){
+            nexty = 0;;
+            nextx = x + 1;
+        } else {
+            nextx = x;
+            nexty = y + 1;
+        }
+
+        if (theBoard[x][y] > 0 && nextx == -1) return true;
+        if (theBoard[x][y] > 0)
+            return subSolve(nextx, nexty);
+
+        for (int  i = 1; i <=  DIMENSION; i++){
+            if (canPutValInSpot(x, y, i) < 0)
+                continue;
+            setCell(x, y, i);
+            if (nextx == -1 && nexty == -1)
+                return true;
+            if (subSolve(nextx, nexty))
+                return true;
+            reset(x,y);
+        }
+
         return false;
     }
 
