@@ -132,7 +132,9 @@ public class Grid{
         }
 
         if (option.equals("s")){
-            solve();
+            boolean isSolved = solve();
+            if (isSolved) return;
+            throw new Exception("The board is currently unsolvable");
         } else if (option.equals("r")) {
              System.out.println(messageToReplace);
             int x,y,val;
@@ -182,8 +184,8 @@ public class Grid{
     }
 
     // solve the game board by running guess-and-check + backtracking algorithm
-    private void solve(){
-
+    private boolean solve(){
+        return false;
     }
 
     public boolean followsAllRules(){
