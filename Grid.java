@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -67,6 +68,7 @@ public class Grid{
     }
 
     // canPutValInSpot will check if we can put val into the board at point (x,y)
+    // returns a negative int if the board would be wrong by putting val in (x,y)
     private int canPutValInSpot(int x, int y, int val){
        if (!rangeCheck(x, y, val)) return FAILED_RANGE_CHECK;
        if (!isValInRow(x, y, val)) return FAILED_ROW_CHECK;
@@ -75,7 +77,6 @@ public class Grid{
        return GOOD_VALUE;
     }
 
-    // isValInRow will check if val is the only of that number in it's row
     private boolean isValInRow(int x, int y, int val){
         for (int i = 0; i < DIMENSION; i++){
             if (i == x) continue;
@@ -114,15 +115,17 @@ public class Grid{
         return true;
     }
 
-    public void playOneRound(){
+    public void playOneRound() throws EOFException, Exception {
         String message = "Type p to play a number or s to solve";
         String messageToPlay = "input 3 values: row, column, and value for that spot";
+        String messageToReplace = "input 3 values: row, column, and value to put in the spot to replace";
         System.out.println("Ready to play?");
 
         String option;
         while (true){
             System.out.println(message);
-            if (!scanner.hasNext()) return;
+            if (!scanner.hasNext()) 
+                throw new EOFException("Tried to read in value, got EOF");
             option = scanner.next();
             if (option.equals("p") || option.equals("s")) break;
             System.out.println("Not one of the options");
@@ -130,29 +133,55 @@ public class Grid{
 
         if (option.equals("s")){
             solve();
+        } else if (option.equals("r")) {
+             System.out.println(messageToReplace);
+            int x,y,val;
+
+            if (!scanner.hasNextInt())
+                throw new EOFException("Tried to read in value, got EOF");
+            x = scanner.nextInt();
+            if(!scanner.hasNextInt())
+                throw new EOFException("Tried to read in value, got EOF");
+            y = scanner.nextInt();
+            if (!scanner.hasNextInt())
+                throw new EOFException("Tried to read in value, got EOF");
+            val = scanner.nextInt();
+
+            if (!rangeCheck(x, y, val)){
+                throw new Exception("Bad x,y,val values: " + x + "," + y + "," + val);
+            } 
+            int curVal = theBoard[x][y];
+            theBoard[x][y] = -1;
+            if (canPutValInSpot(x, y, val) < 0){
+                theBoard[x][y] = curVal;
+                throw new Exception("Illegal to put " + val + " into spot (" + x + "," + y + ")");
+            } else {
+                setCell(x,y,val);
+            }
         } else {
             System.out.println(messageToPlay);
             int x,y,val;
 
             if (!scanner.hasNextInt())
-                return;
+                throw new EOFException("Tried to read in value, got EOF");
             x = scanner.nextInt();
             if(!scanner.hasNextInt())
-                return;
+                throw new EOFException("Tried to read in value, got EOF");
             y = scanner.nextInt();
             if (!scanner.hasNextInt())
-              return;
+                throw new EOFException("Tried to read in value, got EOF");
             val = scanner.nextInt();
 
-            if (theBoard[x][y] > 0)
-                System.err.println("There is already a value in ("+ x + "," + y + "), " + theBoard[x][y]);
-            else if (0 > canPutValInSpot(x, y, val))
-                System.err.println("Illegal to put " + val + " in spot (" + x + "," + y + ")");
+            if (0 > canPutValInSpot(x, y, val))
+                throw new Exception("Illegal to put " + val + " in spot (" + x + "," + y + ")");
+            else if (theBoard[x][y] > 0)
+                throw new Exception("There is already a value in ("+ x + "," + y + "), " + theBoard[x][y]);
             else 
                 setCell(x, y, val);
         }
     }
 
+    // solve the game board by running guess-and-check + backtracking algorithm
     private void solve(){
 
     }
@@ -209,11 +238,21 @@ public class Grid{
         System.out.println(g);
         System.out.println();
         while(!g.boardIsFull()){
-            g.playOneRound();
-            System.out.println();
-            System.out.println(g);
-            System.out.println();
+            try{
+                g.playOneRound();
+                System.out.println();
+                System.out.println(g);
+                System.out.println();
+            } catch (EOFException eofe){
+                System.err.println("Exiting game due to EOF error: " + eofe.getMessage());
+                return;
+            } catch (Exception e){
+                System.err.println(e.getMessage());
+            }
         }
+        if (g.followsAllRules() && g.boardIsFull()){
+            System.out.println("Congrats! You've completed the game board!");
+        }
+         System.out.println("Goodbye");
     }
-
 }
